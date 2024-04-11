@@ -1,5 +1,8 @@
 const usersService = require('./users-service');
 const { errorResponder, errorTypes } = require('../../../core/errors');
+const { password } = require('../../../models/users-schema');
+const { validate } = require('uuid');
+const { passwordMatched } = require('../../../utils/password');
 
 /**
  * Handle get list of users request
@@ -50,6 +53,22 @@ async function createUser(request, response, next) {
     const name = request.body.name;
     const email = request.body.email;
     const password = request.body.password;
+    const confirm_password = request.body.confirm_password;
+
+    //cek dan konfirmasi password
+    const emailExists = await usersService.checkEmailExists(email);
+    if (emailExists) {
+      throw errorResponder(
+        errorTypes.EMAIL_ALREADY_TAKEN,
+        'This Email Address Is Already Taken'
+      );
+    }
+    if (password !== confirm_password) {
+      throw errorResponder(
+        errorTypes.INVALID_PASSWORD,
+        'Your Passwords Do Not Match'
+      );
+    }
 
     const success = await usersService.createUser(name, email, password);
     if (!success) {
@@ -64,7 +83,44 @@ async function createUser(request, response, next) {
     return next(error);
   }
 }
+/**
+ * Handle change password user request
+ * @param {object} request - Express request object
+ * @param {object} response - Express response object
+ * @param {object} next - Express route middlewares
+ * @returns {object} Response object or pass an error to the next route
+ */
+async function changePassword(request, response, next) {
+  try {
+    const id = request.params.id;
+    const password = request.body.password;
 
+    if (!password) {
+      throw errorResponder(
+        errorTypes.INVALID_PASSWORD,
+        'Old Password Does Not Match'
+      );
+    }
+
+    const newPassword = request.body.newPassword;
+    const confirmPassword = request.body.confirmPassword;
+    if (newPassword !== confirmPassword) {
+      throw errorResponder(
+        errorTypes.INVALID_PASSWORD,
+        'Password and Confirm password does not match'
+      );
+    }
+
+    const success = await usersService.changePassword(id, newPassword);
+    if (!success) {
+      throw errorResponder(errorTypes.UNPROCESSABLE_ENTITY, 'Update Failed');
+    }
+
+    return response.status(200).json({ id });
+  } catch (error) {
+    return next(error);
+  }
+}
 /**
  * Handle update user request
  * @param {object} request - Express request object
@@ -91,14 +147,6 @@ async function updateUser(request, response, next) {
     return next(error);
   }
 }
-
-/**
- * Handle delete user request
- * @param {object} request - Express request object
- * @param {object} response - Express response object
- * @param {object} next - Express route middlewares
- * @returns {object} Response object or pass an error to the next route
- */
 async function deleteUser(request, response, next) {
   try {
     const id = request.params.id;
@@ -123,4 +171,5 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  changePassword,
 };

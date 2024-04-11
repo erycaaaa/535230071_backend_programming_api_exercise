@@ -33,6 +33,24 @@ async function createUser(name, email, password) {
 }
 
 /**
+ * Create new user
+ * @param {string} id - id
+ * @param {string} password - Hashed password
+ * @returns {Promise}
+ */
+async function changePassword(id, password) {
+  return User.updateOne(
+    {
+      _id: id,
+    },
+    {
+      $set: {
+        password,
+      },
+    }
+  );
+}
+/**
  * Update existing user
  * @param {string} id - User ID
  * @param {string} name - Name
@@ -62,10 +80,22 @@ async function deleteUser(id) {
   return User.deleteOne({ _id: id });
 }
 
+/**
+ * cek email user
+ * @param {string} email - Email
+ * @returns {Promise}
+ */
+async function checkEmailExists(email) {
+  const existingEmail = await User.findOne({ email });
+  return !!existingEmail;
+}
+
 module.exports = {
   getUsers,
   getUser,
   createUser,
   updateUser,
   deleteUser,
+  checkEmailExists,
+  changePassword,
 };

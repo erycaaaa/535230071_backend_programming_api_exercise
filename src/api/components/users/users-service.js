@@ -1,5 +1,6 @@
 const usersRepository = require('./users-repository');
 const { hashPassword } = require('../../../utils/password');
+const { User } = require('../../../models');
 
 /**
  * Get list of users
@@ -84,6 +85,29 @@ async function updateUser(id, name, email) {
 
   return true;
 }
+/**
+ * Update existing user
+ * @param {string} id - User ID
+ * @param {string} password - password
+ * @returns {boolean}
+ */
+async function changePassword(id, password) {
+  // user
+  const user = await usersRepository.getUser(id);
+  // hash password
+  const hashedNewPassword = await hashPassword(password);
+
+  // User not found
+  if (!user) {
+    return null;
+  }
+  try {
+    await usersRepository.changePassword(id, hashedNewPassword);
+  } catch (err) {
+    return null;
+  }
+  return true;
+}
 
 /**
  * Delete user
@@ -92,25 +116,31 @@ async function updateUser(id, name, email) {
  */
 async function deleteUser(id) {
   const user = await usersRepository.getUser(id);
-
   // User not found
   if (!user) {
     return null;
   }
-
   try {
     await usersRepository.deleteUser(id);
   } catch (err) {
     return null;
   }
-
   return true;
 }
-
+/**
+ * check email user
+ * @param {string} email - email
+ * @returns {boolean}
+ */
+async function checkEmailExists(email) {
+  return await usersRepository.checkEmailExists(email);
+}
 module.exports = {
   getUsers,
   getUser,
   createUser,
   updateUser,
   deleteUser,
+  checkEmailExists,
+  changePassword,
 };
