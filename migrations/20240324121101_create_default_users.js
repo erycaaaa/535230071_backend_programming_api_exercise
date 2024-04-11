@@ -2,7 +2,7 @@ const logger = require('../src/core/logger')('api');
 const { User } = require('../src/models');
 const { hashPassword } = require('../src/utils/password');
 
-const name = 'Administrator';
+const name = 'Administrat11or';
 const email = 'admin@example.com';
 const password = '123456';
 
